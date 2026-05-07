@@ -1,0 +1,20 @@
+[project]
+name = "video-output-bridge"
+version = "0.2.6"
+description = "Bridge VHS_VideoCombine video outputs to standard image payloads for serverless runners (RunPod, Modal). Enables automatic S3 uploads of MP4/WebP files in worker-comfyui deployments."
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+dependencies = []
+classifiers = [
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Repository = "https://github.com/arthurtravers/ComfyUI-VideoOutputBridge"
+Documentation = "https://github.com/arthurtravers/ComfyUI-VideoOutputBridge#readme"
+"Bug Tracker" = "https://github.com/arthurtravers/ComfyUI-VideoOutputBridge/issues"
+
+[tool.comfy]
+PublisherId = "arthur"
+DisplayName = "Video Output Bridge"
+requires-comfyui = ">=1.0.0"  # ComfyUI version compatibility

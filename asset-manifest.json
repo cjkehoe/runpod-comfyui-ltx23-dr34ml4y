@@ -1,0 +1,118 @@
+{
+  "name": "ltx23-dr34ml4y-worker",
+  "source_workflow": "ltx23_dr34ml4y_i2v_v1 based on the proven CelebMaker/NextSeeder LTX I2V graph plus RuneXX LTX-2.3 settings guidance",
+  "mode": "narrow_ltx23_dr34ml4y_i2v_with_native_audio",
+  "custom_nodes": [
+    {
+      "name": "ComfyUI-LTXVideo",
+      "repo": "https://github.com/Lightricks/ComfyUI-LTXVideo.git",
+      "revision": "531512f7286963dc7aff1fd8bf5556e95eae03af",
+      "required": true,
+      "reason": "LTX image-to-video conditioning and audio/video latent nodes"
+    },
+    {
+      "name": "ComfyUI-VideoHelperSuite",
+      "repo": "https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git",
+      "revision": "2984ec4c4b93292421888f38db74a5e8802a8ff8",
+      "required": true,
+      "reason": "MP4 mux/output node for final video delivery"
+    },
+    {
+      "name": "ComfyUI-KJNodes",
+      "repo": "https://github.com/kijai/ComfyUI-KJNodes.git",
+      "revision": "main",
+      "required": true,
+      "reason": "Required by RuneXX LTX-2.3 reference workflows and useful for future split-loader migration"
+    },
+    {
+      "name": "ComfyUI-VideoOutputBridge",
+      "repo": "https://github.com/arthurtravers/ComfyUI-VideoOutputBridge.git",
+      "revision": "main",
+      "required": true,
+      "reason": "Expose VHS video files through the standard image output payload that Runpod uploads"
+    }
+  ],
+  "core_models": [
+    {
+      "filename": "ltx-2.3-22b-dev.safetensors",
+      "relative_path": "models/checkpoints",
+      "url_env": "LTX_CHECKPOINT_URL",
+      "default_url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-dev.safetensors",
+      "download_phase": "request_time_or_manual_prewarm",
+      "notes": "Primary LTX 2.3 dev checkpoint. This all-in-one checkpoint keeps native audio VAE wiring stable for v1; split Kijai files are documented in README as the follow-up migration path."
+    },
+    {
+      "filename": "gemma_3_12B_it.safetensors",
+      "relative_path": "models/text_encoders",
+      "url_env": "LTX_TEXT_ENCODER_URL",
+      "default_url": "https://huggingface.co/GitMylo/LTX-2-comfy_gemma_fp8_e4m3fn/resolve/main/gemma_3_12B_it_fp8_e4m3fn.safetensors",
+      "download_phase": "request_time_or_manual_prewarm",
+      "notes": "Text encoder used by LTXAVTextEncoderLoader"
+    },
+    {
+      "filename": "ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "relative_path": "models/loras",
+      "url_env": "LTX_DISTILLED_LORA_URL",
+      "default_url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "download_phase": "request_time_or_manual_prewarm",
+      "notes": "Official LTX 2.3 distill LoRA 1.1. The handler applies it lightly, default 0.30."
+    },
+    {
+      "filename": "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "relative_path": "models/latent_upscale_models",
+      "url_env": "LTX_SPATIAL_UPSCALER_URL",
+      "default_url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "download_phase": "request_time_or_manual_prewarm",
+      "notes": "Latent 2x upscaler used between the two sampling stages"
+    },
+    {
+      "filename": "DR34ML4Y_LTXXX_V1.safetensors",
+      "relative_path": "models/loras",
+      "url_env": "DR34ML4Y_LTX_LORA_URL",
+      "default_url": "https://civitai.com/api/download/models/2913022",
+      "download_phase": "request_time_or_manual_prewarm",
+      "notes": "DR34ML4Y_LT3X_v1 action LoRA for the five CEL-180 v1 action triggers"
+    }
+  ],
+  "runtime_assets": [
+    {
+      "kind": "input_image",
+      "relative_path": "input",
+      "source": "runtime_download",
+      "hosting": [
+        "signed public URL",
+        "S3"
+      ]
+    },
+    {
+      "kind": "debug_runtime_lora",
+      "relative_path": "models/loras",
+      "source": "runtime_download",
+      "hosting": ["Hugging Face", "S3"],
+      "notes": "Supported only for raw workflow debugging. The v1 high-level CEL-180 endpoint uses prewarmed DR34ML4Y from the network volume."
+    }
+  ],
+  "hosting_strategy": {
+    "stable_core_weights": "Ensure them inside the request handler or prewarm them manually; use /runpod-volume as a cache when available.",
+    "fast_changing_loras": "Do not use runtime LoRA downloads for the v1 DR34ML4Y test path. Prewarm DR34ML4Y into /runpod-volume once and reuse it.",
+    "input_images": "Download per-request source frames into Comfy input so LoadImage can resolve them deterministically."
+  },
+  "trim_summary": {
+    "kept_features": [
+      "LTX I2V conditioning",
+      "optional audio mux",
+      "two-stage sampling",
+      "latent upscaling",
+      "MP4 output"
+    ],
+    "removed_features": [
+      "T2V routing",
+      "preview nodes",
+      "notes and UX helpers",
+      "simple switch scaffolding",
+      "rgthree Power LoRA loaders",
+      "post color/sharpen/film-grain chain",
+      "advanced alternate sampler branch"
+    ]
+  }
+}
